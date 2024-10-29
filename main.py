@@ -1,37 +1,32 @@
 import cv2
-import numpy as np
-import requests
 
-def stream_video():
-    url = 'http://192.168.8.234/stream'  # Replace with your ESP32 IP
-    stream = requests.get(url, stream=True, timeout=10)  # 10-second timeout
+def stream_from_esp32():
+    url = 'http://192.168.8.234:80/stream'  # Replace with the actual IP address and port of your ESP32-CAM
+    print("Connecting to ESP32-CAM stream...")
 
-    if stream.status_code != 200:
-        print("Failed to connect to ESP32 stream.")
+    # Open the video stream with OpenCV
+    cap = cv2.VideoCapture(url)
+    
+    if not cap.isOpened():
+        print("Error: Unable to connect to ESP32-CAM.")
         return
 
-    bytes_data = bytes()
-    for chunk in stream.iter_content(chunk_size=1024):
-        bytes_data += chunk
-        a = bytes_data.find(b'\xff\xd8')  # Start of JPEG
-        b = bytes_data.find(b'\xff\xd9')  # End of JPEG
+    print("Connected to ESP32-CAM stream. Press 'q' to exit.")
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Failed to grab frame.")
+            break
+        
+        cv2.imshow("ESP32-CAM Stream", frame)
 
-        if a != -1 and b != -1:
-            jpg = bytes_data[a:b+2]
-            bytes_data = bytes_data[b+2:]
+        # Exit if 'q' is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-            try:
-                img = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
-                if img is not None:
-                    cv2.imshow("ESP32 Stream", img)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
-                else:
-                    print("Empty frame received, skipping...")
-            except cv2.error as e:
-                print(f"OpenCV error: {e}")
-                continue
-
+    # Release the video capture and close OpenCV windows
+    cap.release()
     cv2.destroyAllWindows()
+    print("Stream ended.")
 
-stream_video()
+stream_from_esp32()

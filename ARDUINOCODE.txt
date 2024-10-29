@@ -46,11 +46,15 @@ void setupCamera() {
   config.pin_sccb_scl = SIOC_GPIO_NUM;
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
-  config.xclk_freq_hz = 10000000;
+  
+  // Adjusted settings for improved stability
+  config.xclk_freq_hz = 8000000;       // Lower XCLK frequency
   config.pixel_format = PIXFORMAT_JPEG;
-  config.frame_size = FRAMESIZE_QVGA;  // Set to lower resolution if rebooting persists
-  config.jpeg_quality = 12;
-  config.fb_count = 1;
+  //config.frame_size = FRAMESIZE_QQVGA; //  with low resolution
+  config.frame_size = FRAMESIZE_VGA;  // Higher resolution for better quality
+
+  config.jpeg_quality = 7;            // Lower quality for reduced memory usage
+  config.fb_count = 1;                 // Single buffer to conserve memory
 
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
